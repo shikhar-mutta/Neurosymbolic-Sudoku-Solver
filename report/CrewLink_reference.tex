@@ -1,0 +1,616 @@
+\documentclass[12pt,a4paper]{article}
+
+% Encoding (must be before other packages)
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% Layout
+\usepackage[margin=2.5cm, headheight=15pt]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{pgfgantt}
+\usepackage{parskip}
+\usepackage[protrusion=true,expansion=false]{microtype}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage{ragged2e}
+
+% Colors
+\definecolor{iiitbblue}{RGB}{0,62,126}
+\definecolor{lightgray}{RGB}{245,245,245}
+\definecolor{darkgray}{RGB}{80,80,80}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+
+% Hyperref — no colored text, no visible borders, no anchor dots
+\hypersetup{
+    colorlinks=false,
+    pdfborder={0 0 0},
+    pdftitle={PE Report -- Shikhar Mutta},
+    pdfauthor={Shikhar Mutta}
+}
+
+% Section formatting
+\titleformat{\section}{\large\bfseries\color{iiitbblue}}{\thesection.}{0.6em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\color{darkgray}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{0.6em}{}
+
+% Header / Footer
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small\color{darkgray} PE Report -- CrewLink 2.0}
+\rhead{\small\color{darkgray} Shikhar Mutta | MT2025114}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Listings style
+\lstset{
+  backgroundcolor=\color{lightgray},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{iiitbblue}\bfseries,
+  commentstyle=\color{codegreen},
+  stringstyle=\color{codepurple},
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{darkgray},
+  captionpos=b
+}
+
+% Column types
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\Centering\arraybackslash}p{#1}}
+
+%==============================================================================
+\begin{document}
+
+%------------------------------------------------------------------------------
+% Title Page
+%------------------------------------------------------------------------------
+\begin{titlepage}
+\begin{center}
+
+\vspace*{1.5cm}
+
+% Institution header
+{\large\bfseries International Institute of Information Technology Bangalore}\\[0.5em]
+{\normalsize Project Elective (PE)}\\[0.2em]
+{\small M.Tech 2025\,--\,2027 \textbar\ Semester II}\\[1.5em]
+
+{\color{darkgray}\rule{\linewidth}{0.6pt}}\\[2.5em]
+
+% Main title
+{\LARGE\bfseries Project Elective (PE) Report}\\[0.7em]
+{\large\itshape CrewLink 2.0}\\[2em]
+
+% Decorative separator with dot
+{\color{darkgray}\rule{0.44\linewidth}{0.4pt}}\enspace
+{\color{iiitbblue}$\bullet$}\enspace
+{\color{darkgray}\rule{0.44\linewidth}{0.4pt}}\\[3em]
+
+% Student info
+{\normalsize\bfseries Shikhar Mutta (MT2025114)}\\[0.6em]
+{\normalsize shikhar.mutta@iiitb.ac.in}\\[0.6em]
+{\normalsize Guide:\ Prof.\ V N Muralidhara}\\[0.6em]
+{\normalsize Schedule Optimization Lab, R-303}\\[0.6em]
+{\normalsize 30 May 2026}\\
+
+\vfill
+
+% IIITB Logo
+\includegraphics[width=4cm]{IIITB_logo.png}
+
+\vspace{3cm}
+
+\end{center}
+\end{titlepage}
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+%==============================================================================
+\section{Abstract}
+
+This report documents the contributions made by Shikhar Mutta (MT2025114)
+during the Project Elective (PE) -- Semester II at IIIT Bangalore, under the
+supervision of Prof.\ V N Muralidhara, in the Schedule Optimization Lab
+(R-303). The work was carried out on the \textbf{CrewLink 2.0} system -- a
+web-based crew rostering and scheduling optimization platform developed for
+Indian Railways crew management.
+
+Over the course of Semester II (\textbf{1 January 2026 -- 29 May 2026}),
+contributions spanned three feature areas: (1)~Train Timetable UI improvements
+(Crew-25/Crew-89 issues), (2)~the Copy CrewLink feature (full-stack), and
+(3)~CSV Import enhancement with multi-stage conflict detection and resolution,
+plus a soft-delete bug fix. In total, \textbf{11 commits} were made to the
+branch \texttt{shikhar-2025-26}, contributing approximately \textbf{900+ net
+lines of code} across frontend (AngularJS) and backend (Java/Spring Boot)
+components.
+
+%==============================================================================
+\section{Introduction}
+
+\subsection{Background}
+
+Railway crew scheduling is a complex combinatorial optimization problem.
+The Indian Railways network operates thousands of trains daily, requiring
+precise assignment of locomotive pilots, assistant loco pilots, and crew
+supervisors to driving duties. Manual scheduling is error-prone and
+time-intensive.
+
+The project aims to automate and optimize this process through a software platform
+that handles:
+\begin{itemize}[leftmargin=1.5em]
+    \item CrewLink definitions (crew availability windows at stations)
+    \item Round-trip planning for crew cycles
+    \item Driving duty and driving section management
+    \item Train timetable ingestion and visualization
+    \item Plan generation using optimization algorithms
+\end{itemize}
+
+\subsection{Project: CrewLink 2.0}
+
+CrewLink 2.0 is a full-stack web application built on:
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Backend:} Java 8, Spring Boot 1.3, Spring Data JPA, Spring Security
+    \item \textbf{Frontend:} AngularJS (1.x), UI-Bootstrap, ocLazyLoad
+    \item \textbf{Database:} MySQL 5.x (\texttt{crewlink\_db})
+    \item \textbf{Server Port:} 6060
+\end{itemize}
+
+The system exposes a REST API consumed by the AngularJS Single Page Application
+(SPA). Core entities include \texttt{CrewLinkVM}, \texttt{RoundTrip},
+\texttt{DrivingDuty}, \texttt{DrivingSection}, \texttt{UserPlan}, and
+\texttt{Train}.
+
+\subsection{Objectives of PE}
+
+The primary objectives assigned during PE Semester II were:
+\begin{enumerate}[leftmargin=1.5em]
+    \item Improve the Train Timetable UI for better usability and readability.
+    \item Implement the \textit{Copy CrewLink} feature to allow duplication of
+          crew scheduling plans.
+    \item Enhance the CSV import pipeline with robust conflict detection and
+          resolution.
+    \item Fix bugs related to soft-delete behaviour in crew management.
+\end{enumerate}
+
+%==============================================================================
+\section{System Overview}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{} L{3cm} L{5cm} L{6cm} @{}}
+\toprule
+\textbf{Layer} & \textbf{Technology} & \textbf{Role} \\
+\midrule
+Frontend        & AngularJS + UI-Bootstrap          & SPA Views, Controllers, Services \\
+REST API        & Spring MVC + Spring Data REST     & \texttt{/api} endpoints \\
+Service Layer   & Java Spring Services              & Business Logic, Optimization \\
+Repository      & Spring Data JPA + Custom Impl     & DB Queries, Transactions \\
+Database        & MySQL (\texttt{crewlink\_db})     & Persistence \\
+\bottomrule
+\end{tabular}
+\caption{CrewLink 2.0 -- Architecture Layers}
+\end{table}
+
+Key domain concepts:
+\begin{description}[leftmargin=1.5em]
+    \item[\textbf{CrewLink}] A crew availability window at a station, defined
+          by start/end time, duration, distance, and rest requirements.
+    \item[\textbf{RoundTrip}] A complete crew duty cycle from home station, out
+          to a remote station, and back, containing multiple Driving Duties.
+    \item[\textbf{UserPlan}] A versioned crew scheduling plan. Multiple plans
+          can exist; one is active at a time.
+    \item[\textbf{DrivingDuty / DrivingSection}] Subdivisions of a round trip
+          representing individual train segments driven by a crew member.
+\end{description}
+
+%==============================================================================
+\section{Work Done -- Detailed Contributions}
+
+\subsection{Phase 1: Train Timetable UI Improvements (February 9--10, 2026)}
+
+\textbf{Issue Reference:} Crew-25 / Crew-89 \\
+\textbf{Files Modified:} \texttt{trainTimeTable.js}, \texttt{trainTimeTable.html}
+
+The Train Timetable view is the primary interface for viewing scheduled train
+runs. Several usability issues were identified and resolved:
+
+\subsubsection{P-1: Pagination Removal / Default to 100 Rows}
+
+\textbf{Problem:} The timetable was paginated with a small default page size,
+forcing users to navigate multiple pages to view a full day's timetable.
+
+\textbf{Solution:} Modified the AngularJS controller (\texttt{trainTimeTable.js})
+to set the default page size to 100, effectively displaying the entire
+timetable in a single view for most divisions.
+
+\subsubsection{P-3: Train Number with Day of Origination}
+
+\textbf{Problem:} Train numbers did not indicate whether a train runs DAILY or
+on specific days (MON, TUE, WED, THU, FRI, SAT, SUN).
+
+\textbf{Solution:} Updated \texttt{trainTimeTable.html} to display the
+originating day tag alongside the train number (e.g., \textit{12345/DAILY},
+\textit{12346/MON}), improving crew planning accuracy.
+
+\subsubsection{P-4 \& P-5: New Train Number Field + Editable Box}
+
+\textbf{Problem:} There was no mechanism to add a new train number or edit an
+existing one directly from the timetable UI.
+
+\textbf{Solution:} Added a new train number input field and an inline edit box
+to the timetable interface, allowing operators to update train numbers without
+navigating to a separate form.
+
+\subsubsection{P-6: Remove Day Column}
+
+\textbf{Problem:} A redundant ``Day'' column cluttered the timetable grid.
+
+\textbf{Solution:} Removed the column from \texttt{trainTimeTable.html} to
+simplify the display, since day information was now embedded in the train
+number label (P-3).
+
+\subsubsection{Confirmation Modal}
+
+A generic \textbf{Confirmation Modal} component was added (February 10, 2026)
+to guard destructive or irreversible actions (e.g., deleting a crew link,
+confirming plan creation). This reusable modal improved the overall UX safety
+of the application.
+
+\medskip
+\begin{tabular}{@{} L{2.6cm} L{2.6cm} L{8cm} @{}}
+\toprule
+\textbf{Commit Hash} & \textbf{Date} & \textbf{Description} \\
+\midrule
+\texttt{d33dc18b} & 2026-02-09 & P-6: Remove Day column \\
+\texttt{8f6ab4ed} & 2026-02-09 & P-1: Pagination set to 100 \\
+\texttt{de63a0cb} & 2026-02-09 & P-3: Train number with originating day \\
+\texttt{bba1f804} & 2026-02-09 & P-4: New train number field \\
+\texttt{a1034b97} & 2026-02-09 & P-4,5: Train number edit box refined \\
+\texttt{16820893} & 2026-02-10 & Confirmation Modal added \\
+\texttt{badc0ecb} & 2026-02-10 & Minor update / polish \\
+\bottomrule
+\end{tabular}
+
+%------------------------------------------------------------------------------
+
+\subsection{Phase 2: Copy CrewLink Feature (March 20--26, 2026)}
+
+\textbf{Files Modified/Created:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{CrewLinkVMController.java} (+15 lines)
+    \item \texttt{CrewLinkVMRepository.java} (+5 lines)
+    \item \texttt{CrewLinkVMRepositoryImpl.java} (+201 lines)
+    \item \texttt{CrewLinkCopyHelper.java} (new, +56 lines)
+    \item \texttt{crewLink.js} (frontend, +60 lines modified)
+\end{itemize}
+\textbf{Total:} 315 insertions across 5 files.
+
+\subsubsection{Motivation}
+
+Railway divisions periodically need to replicate an existing crew schedule plan
+to a new time period or division, making small adjustments rather than building
+from scratch. The \textit{Copy CrewLink} feature enables this workflow.
+
+\subsubsection{Backend Implementation}
+
+A new helper class \textbf{CrewLinkCopyHelper} was introduced to separate the
+copy business logic from the HTTP layer. The core copy routine in
+\textbf{CrewLinkVMRepositoryImpl} performs a transactional deep copy of the
+source \texttt{crew\_link} and all its children (\texttt{round\_trip},
+\texttt{driving\_duty}, \texttt{driving\_duty\_element},
+\texttt{driving\_section}) into the target \texttt{UserPlan}:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item Each entity is inserted with \texttt{copy\_of} set to its source ID,
+          enabling idempotent re-copy.
+    \item All scheduling parameters (time windows, durations, distances,
+          rest requirements, crew type) are preserved verbatim.
+    \item Conflict detection (\texttt{findCopyConflicts}) identifies driving
+          sections in the target plan whose (train, from-station, to-station,
+          start day, start time) tuple overlaps with the source, allowing the
+          operator to resolve before committing the copy.
+\end{itemize}
+
+Two REST endpoints were added to \textbf{CrewLinkVMController}: a
+\texttt{GET /checkCopyConflicts} to surface conflicts, and a
+\texttt{POST /copyCrewLink} that accepts the resolved conflict list and
+performs the copy atomically.
+
+\subsubsection{Frontend Implementation}
+
+The AngularJS controller \texttt{crewLink.js} was updated to:
+\begin{itemize}[leftmargin=1.5em]
+    \item Add a ``Copy Plan'' button in the UI
+    \item Invoke the backend copy endpoint via \texttt{\$http}
+    \item Reload the crew link list after a successful copy operation
+    \item Display appropriate success/error feedback to the operator
+\end{itemize}
+
+\medskip
+\begin{tabular}{@{} L{2.6cm} L{2.6cm} L{8cm} @{}}
+\toprule
+\textbf{Commit Hash} & \textbf{Date} & \textbf{Description} \\
+\midrule
+\texttt{853330e8} & 2026-03-20 & Frontend scaffold for Copy CrewLink \\
+\texttt{b2d3283f} & 2026-03-26 & Full backend + frontend implementation \\
+\bottomrule
+\end{tabular}
+
+%------------------------------------------------------------------------------
+
+\subsection{Phase 3: CSV Import Enhancement with Conflict Detection (May 28--29, 2026)}
+
+\textbf{Files Modified/Created:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{import-crewlink.js} (new standalone script, +247 lines)
+    \item \texttt{CrewLinkCsvImportService.java} (major rework, +245 lines)
+    \item \texttt{CrewLinkCsvImportController.java} (+7 lines)
+    \item \texttt{crewLinkCsvImport.js} (frontend controller, +26 lines)
+    \item \texttt{crewLinkCsvImport.html} (view, +5 lines)
+    \item \texttt{crew1.csv} (sample import file, 100 rows)
+\end{itemize}
+\textbf{Total:} 590 insertions across 7 files.
+
+\subsubsection{Motivation}
+
+The existing CSV import for crew data lacked validation. When imported crew
+links conflicted with existing data (duplicate station pairs, overlapping time
+windows), the system would either silently overwrite records or crash. A robust
+conflict detection and resolution mechanism was required.
+
+\subsubsection{Conflict Detection Logic}
+
+The reworked \textbf{CrewLinkCsvImportService} implements a multi-stage import
+pipeline:
+
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{Parse:} Read and deserialize CSV rows using OpenCSV into
+          intermediate DTOs.
+    \item \textbf{Validate:} Check each row for mandatory fields, valid station
+          codes, and time format compliance (\texttt{HH:MM}).
+    \item \textbf{Conflict Check:} Query the database for existing crew links
+          matching the same station pair and plan. If overlapping records are
+          found, they are flagged.
+    \item \textbf{Resolution:} Conflicting records are surfaced to the user
+          with options to:
+        \begin{itemize}
+            \item \textit{Overwrite} -- replace the existing record
+            \item \textit{Skip} -- ignore the conflicting import row
+            \item \textit{Merge} -- apply field-level updates
+        \end{itemize}
+    \item \textbf{Commit:} Non-conflicting rows are persisted immediately;
+          resolved conflicts are applied per user choice.
+\end{enumerate}
+
+\subsubsection{Frontend Changes}
+
+The import view (\texttt{crewLinkCsvImport.html}) was updated to display
+conflict summary counts and provide per-conflict resolution controls.
+
+\subsubsection{Soft Delete Bug Fix in Copy CrewLink (May 29, 2026)}
+
+A data-corruption bug was identified in the Copy CrewLink backend, originating
+from the initial March implementation of \texttt{performCrewLinkCopy}.
+
+\textbf{Root cause.} The original implementation used bulk \texttt{INSERT \ldots
+SELECT} statements to copy all round trips for a source crew link at once, then
+fetched the newly-created IDs and built an \textit{index-based} mapping from old
+IDs to new IDs. Driving duties, duty elements, and driving sections were then
+linked to new parents using this positional map.
+
+This approach broke in two scenarios related to soft-deleted \texttt{UserPlan}
+records:
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Partial deletion:} After conflict resolution deleted some but
+          not all child entities, the remaining entities no longer occupied
+          contiguous positions in the ID sequence. The positional mapping then
+          wired child records to the wrong parents, producing an inconsistent
+          copy.
+    \item \textbf{Re-copy after soft delete:} When a \texttt{UserPlan} was
+          soft-deleted (\texttt{deleted = 1} on the \texttt{user\_plan} row),
+          its associated crew links and child records remained in the database.
+          Re-copying the same source into a fresh plan would encounter stale
+          \texttt{copy\_of} references and generate duplicate or mis-linked
+          records because the bulk approach did not check for existing copies.
+\end{itemize}
+
+\textbf{Fix.} The bulk batch approach was replaced with an entity-by-entity
+iterative copy in \texttt{CrewLinkVMRepositoryImpl.performCrewLinkCopy()}
+(commit \texttt{600196b8}). For each level of the hierarchy the method now:
+\begin{enumerate}[leftmargin=1.5em]
+    \item Queries for an existing copy in the target plan using
+          \texttt{copy\_of = \textlangle source\,id\textrangle}.
+    \item If found -- \texttt{UPDATE} the existing record to re-link it to the
+          new parent.
+    \item If not found -- \texttt{INSERT} a new record with \texttt{copy\_of}
+          set to the source ID.
+\end{enumerate}
+This makes the copy operation idempotent and correct under any combination of
+prior conflict deletions or soft-deleted plans.
+
+\medskip
+\begin{tabular}{@{} L{2.6cm} L{2.6cm} L{8cm} @{}}
+\toprule
+\textbf{Commit Hash} & \textbf{Date} & \textbf{Description} \\
+\midrule
+\texttt{e86de557} & 2026-05-28 & CSV import with conflict detection \& resolution \\
+\texttt{600196b8} & 2026-05-29 & Soft delete related issue resolved \\
+\bottomrule
+\end{tabular}
+
+%==============================================================================
+\section{Timeline of Work}
+
+\subsection{Summary Table}
+
+\begin{longtable}{@{} L{2.5cm} L{3cm} L{8cm} @{}}
+\toprule
+\textbf{Period} & \textbf{Feature Area} & \textbf{Tasks Completed} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Period} & \textbf{Feature Area} & \textbf{Tasks Completed} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\small\itshape Continued on next page\ldots}
+\endfoot
+\bottomrule
+\endlastfoot
+
+Jan 2026
+    & Onboarding \& Study
+    & Codebase walkthrough; understanding domain entities (CrewLink, RoundTrip,
+      DrivingDuty); local environment setup; review of open issues
+      (Crew-25, Crew-89). \\[0.4em]
+
+Feb 2026 (09--10)
+    & Timetable UI Fixes
+    & P-1: Pagination set to 100; P-3: Day-of-origination label; P-4/P-5:
+      Train number edit box; P-6: Day column removed; Confirmation Modal. \\[0.4em]
+
+Mar 2026 (20--26)
+    & Copy CrewLink
+    & Frontend scaffold; backend logic via \texttt{CrewLinkCopyHelper} +
+      repository; REST endpoint; AngularJS frontend integration. \\[0.4em]
+
+Apr 2026
+    & Review \& Design
+    & End-to-end testing of Copy CrewLink with real plans; design of
+      multi-stage CSV conflict detection strategy. (No code commits.) \\[0.4em]
+
+May 2026 (28--29)
+    & CSV Import \& Bug Fix
+    & Enhanced import pipeline; multi-stage conflict detection \& resolution
+      engine; soft-delete bug in Copy CrewLink fixed (position-based ID mapping
+      replaced with \texttt{copy\_of}-tracked iterative copy). \\[0.4em]
+\end{longtable}
+
+\subsection{Gantt Chart}
+
+\begin{figure}[h]
+\centering
+\begin{ganttchart}[
+    hgrid,
+    vgrid,
+    x unit=2.2cm,
+    y unit chart=0.70cm,
+    bar/.style={fill=iiitbblue!70, rounded corners=2pt},
+    bar incomplete/.style={fill=iiitbblue!30},
+    title/.style={fill=iiitbblue!15, draw=iiitbblue!60},
+    title label font=\small\bfseries,
+    bar label font=\small,
+    bar label node/.append style={align=right},
+    group label font=\small\bfseries,
+    canvas/.style={draw=darkgray!40}
+]{1}{5}
+    \gantttitle{Jan '26}{1}
+    \gantttitle{Feb '26}{1}
+    \gantttitle{Mar '26}{1}
+    \gantttitle{Apr '26}{1}
+    \gantttitle{May '26}{1} \\
+
+    \ganttbar{Onboarding \& Study}{1}{1} \\
+    \ganttbar{Timetable UI Fixes (Crew-25/89)}{2}{2} \\
+    \ganttbar{Confirmation Modal}{2}{2} \\
+    \ganttbar{Copy CrewLink -- Frontend}{3}{3} \\
+    \ganttbar{Copy CrewLink -- Backend}{3}{3} \\
+    \ganttbar{Review \& CSV Import Design}{4}{4} \\
+    \ganttbar{CSV Import Enhancement}{5}{5} \\
+    \ganttbar{Soft Delete Bug Fix}{5}{5}
+\end{ganttchart}
+\caption{Work Timeline -- Shikhar Mutta (Jan 2026 -- May 2026)}
+\end{figure}
+
+%==============================================================================
+\section{Technical Skills Demonstrated}
+
+\begin{center}
+\begin{tabular}{@{} L{3.2cm} L{5.5cm} L{4.8cm} @{}}
+\toprule
+\textbf{Skill Area} & \textbf{Technology / Concept} & \textbf{Applied In} \\
+\midrule
+Backend Dev      & Java, Spring Boot, Spring Data JPA    & Copy CrewLink, CSV Import \\
+REST API Design  & Spring MVC Controllers                & Copy CrewLink endpoint \\
+ORM / Database   & Hibernate, MySQL, Transactions        & Repository implementation \\
+Frontend Dev     & AngularJS, HTML5, Bootstrap           & All UI features \\
+Data Import      & CSV parsing (OpenCSV), DTOs           & CSV Import pipeline \\
+Conflict Logic   & Multi-stage validation pipelines      & CSV conflict detection \\
+Bug Fixing       & Soft delete, query filtering          & Soft delete fix \\
+Version Control  & Git (feature branching, commits)      & All contributions \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%==============================================================================
+\section{Commit Log}
+
+Complete list of commits by Shikhar Mutta on branch \texttt{shikhar-2025-26}:
+
+\begin{center}
+\begin{tabular}{@{} L{2.4cm} L{2.4cm} L{8.5cm} @{}}
+\toprule
+\textbf{Hash} & \textbf{Date} & \textbf{Commit Message} \\
+\midrule
+\texttt{d33dc18b} & 2026-02-09 & Crew-25/89 P-6: Day column deleted \\
+\texttt{8f6ab4ed} & 2026-02-09 & Crew-25/89 P-1: Pagination set to 100 \\
+\texttt{de63a0cb} & 2026-02-09 & Crew-25/89 P-3: Train number with run day \\
+\texttt{bba1f804} & 2026-02-09 & Crew-25/89 P-4: New train number field \\
+\texttt{a1034b97} & 2026-02-09 & Crew-25/89 P-4,5: Train number edit box \\
+\texttt{16820893} & 2026-02-10 & Confirmation Modal added \\
+\texttt{badc0ecb} & 2026-02-10 & Update (minor polish) \\
+\texttt{853330e8} & 2026-03-20 & Copy CrewLink frontend basics done \\
+\texttt{b2d3283f} & 2026-03-26 & Copy CrewLink functionality implemented \\
+\texttt{e86de557} & 2026-05-28 & CSV import with conflict detection \\
+\texttt{600196b8} & 2026-05-29 & Soft delete related issue resolved \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%==============================================================================
+\section{Conclusion}
+
+Over PE Semester II, meaningful contributions were made to the CrewLink 2.0
+system across three distinct phases. The Train Timetable UI improvements
+directly impacted operator usability by making the timetable readable in a
+single view with better train identification. The Copy CrewLink feature
+introduced a productivity enhancement for scheduling planners, reducing manual
+rework, and a subsequent soft-delete bug fix corrected a data-corruption issue
+in the copy routine where positional ID mapping produced incorrect parent-child
+associations after partial conflict deletions. The CSV import enhancement with
+conflict resolution is the most technically substantial contribution,
+introducing a data integrity safeguard that prevents incorrect crew data from
+entering the system.
+
+The work provided practical exposure to full-stack enterprise Java development,
+optimization system internals, and the domain of railway crew scheduling --
+directly relevant to the project's goals under Prof.\ V N Muralidhara
+at the Schedule Optimization Lab (R-303), IIIT Bangalore.
+
+%==============================================================================
+\section*{Declaration}
+
+I hereby declare that the work presented in this report is my own, carried out
+under the guidance of Prof.\ V N Muralidhara, as part of the Project Elective
+course (Semester II) at IIIT Bangalore during the academic year 2025\,--\,26.
+
+\vspace{4em}
+\begin{flushright}
+\textbf{Prof.\ V N Muralidhara}\\[0.3em]
+Project Elective Guide\\[2em]
+\textit{Date:}~\underline{\hspace{4cm}}
+\end{flushright}
+
+\end{document}

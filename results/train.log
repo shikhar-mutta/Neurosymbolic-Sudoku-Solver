@@ -1,0 +1,3 @@
+training samples: 24000 (1500 base puzzles x 16 symmetries)
+epochs: 17, best val R2: 0.1389
+saved

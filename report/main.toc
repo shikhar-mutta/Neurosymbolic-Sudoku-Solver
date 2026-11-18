@@ -1,0 +1,17 @@
+\contentsline {section}{\numberline {1}Abstract}{1}{section.1}%
+\contentsline {section}{\numberline {2}Problem Statement and Goals}{1}{section.2}%
+\contentsline {section}{\numberline {3}System Architecture}{1}{section.3}%
+\contentsline {section}{\numberline {4}Methodology}{2}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Input format}{2}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Symbolic module: SAT encoding}{2}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}CDCL solver}{3}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Neural module}{3}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Neural--symbolic interface}{3}{subsection.4.5}%
+\contentsline {section}{\numberline {5}Experimental Results}{3}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Quality of the neural proposals}{3}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Effect on the SAT search}{4}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Why not neural only?}{5}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Solver benchmarks and ablations}{5}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Conclusions}{6}{section.6}%
+\contentsline {section}{\numberline {7}How to Run}{6}{section.7}%
+\contentsline {section}{\numberline {8}Individual Contributions}{6}{section.8}%
