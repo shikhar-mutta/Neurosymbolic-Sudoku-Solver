@@ -89,7 +89,13 @@ def main():
         solve_and_report(puz, a.mode, a.variant, truth, a.explain)
     else:
         from sudoku_ns import generator as G
-        text = sys.stdin.read() if a.file == "-" else Path(a.file).read_text()
+        try:
+            text = sys.stdin.read() if a.file == "-" else Path(a.file).read_text()
+        except OSError:
+            sys.exit(f"Input file not found: {a.file}\n"
+                     f"Give a board file in the board = [[...]] format, e.g.\n"
+                     f"  python3 main.py solve-board examples/inputs/standard_classic.txt\n"
+                     f"or run with no arguments to use the default input.")
         try:
             grid = G.parse_board_list(text)
         except ValueError as e:

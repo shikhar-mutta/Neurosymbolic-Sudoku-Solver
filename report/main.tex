@@ -130,7 +130,7 @@ $\Downarrow$\\[4pt]
 \fbox{verified solution + uniqueness check}
 \end{center}
 
-\begin{table}[h]\centering\small
+\begin{table}[htbp]\centering\small
 \begin{tabular}{@{}L{5.2cm}L{9.5cm}@{}}\toprule
 Module & Responsibility\\\midrule
 \texttt{sudoku\_ns/sat.py} & CDCL solver: 2-watched literals, 1-UIP learning, VSIDS, Luby restarts, assumptions, cores, guidance hook\\
@@ -140,7 +140,7 @@ Module & Responsibility\\\midrule
 \texttt{sudoku\_ns/neural.py} & Neural module: features, MLP, training\\
 \texttt{sudoku\_ns/neurosym.py} & Neural--symbolic interface: guidance, hints, core-guided repair\\
 \texttt{sudoku\_ns/explain.py} & Plain-language explanation of conflicts (unsatisfied conditions)\\
-\texttt{main.py}, \texttt{tests/}, \texttt{experiments/} & CLI, unit tests, reproduction of all results\\\bottomrule
+\texttt{main.py}; \texttt{tests/}; \texttt{experiments/} & CLI, unit tests, experiment scripts that regenerate every result\\\bottomrule
 \end{tabular}
 \caption{Project structure.}
 \end{table}
@@ -200,7 +200,7 @@ All numbers come from \texttt{experiments/run\_experiments.py} (fixed seeds; $60
 are minimal (no clue can be removed; about $19$--$24$ clues).
 
 \subsection{Quality of the neural proposals}
-\begin{table}[h]\centering\footnotesize
+\begin{table}[htbp]\centering\footnotesize
 \begin{tabular}{@{}lcccccc@{}}\toprule
  & Blank acc.\ & Valid grids & \multicolumn{4}{c}{precision (coverage), confidence $\ge$}\\
  & & & 0.5 & 0.7 & 0.9 & 0.95\\\midrule
@@ -209,13 +209,13 @@ Hard (minimal) & 27.7\% & 0\% & 38\% (17\%) & 51\% (3\%) & 69\% (1\%) & 77\% (0.
 \end{tabular}
 \caption{Top-1 accuracy on blank cells, rate of fully valid predicted grids, and precision/coverage as a function of the confidence threshold.}
 \end{table}
-\begin{figure}[h]\centering\includegraphics[width=0.85\linewidth]{figures/neural_precision.pdf}
+\begin{figure}[htbp]\centering\includegraphics[width=0.85\linewidth]{figures/neural_precision.pdf}
 \caption{Higher confidence means higher precision but fewer cells covered.}\end{figure}
 The network alone is weak: $0\%$ of its completed grids satisfy the Sudoku rules. Its confidence is informative though (precision rises from $42\%$ to $87\%$ on medium puzzles as the threshold rises), which is what the
 hint mechanism exploits. A threshold below $0.9$ yields many wrong hints.
 
 \subsection{Effect on the SAT search}
-\begin{table}[h]\centering\small
+\begin{table}[htbp]\centering\small
 \begin{tabular}{@{}llccccc@{}}\toprule
 Puzzles & Mode & decisions & conflicts (mean) & conflicts (max) & hints/dropped & time (ms)\\\midrule
 Medium & plain & 0.22 & 0.083 & 2 & -- & 23.5\\
@@ -248,7 +248,7 @@ For a random minimal puzzle the first conflict is typically caused by a chain of
 The network's completed grids satisfy all Sudoku rules for $0\%$ of puzzles, with $42\%$/$28\%$ blank-cell accuracy (medium/hard). Learned constraint satisfaction is approximate; SAT guarantees correctness.
 
 \subsection{Solver benchmarks and ablations}\label{sec:solver}
-\begin{table}[h]\centering\small
+\begin{table}[htbp]\centering\small
 \begin{tabular}{@{}lcccc@{}}\toprule
 Mean conflicts (CDCL) / nodes (CSP) & easy (36) & medium (30) & minimal & hardest of 60\\\midrule
 CDCL (VSIDS + restarts) & 0.0 & 0.0 & 13.2 & 107\\
@@ -258,7 +258,7 @@ CSP backtracking (MRV) & 45.0 & 61.4 & 7763 & 15598\\\bottomrule
 \end{tabular}
 \caption{Search effort on diagonal puzzles (40 random puzzles per class; ``hardest'' is the most conflict-heavy of 60 random minimal puzzles).}
 \end{table}
-\begin{figure}[h]\centering\includegraphics[width=0.7\linewidth]{figures/solver_bench.pdf}
+\begin{figure}[htbp]\centering\includegraphics[width=0.7\linewidth]{figures/solver_bench.pdf}
 \caption{Mean wall-clock time (log scale). CDCL times include building the CNF ($\approx20$\,ms).}\end{figure}
 (i) CDCL needs orders of magnitude less search than CSP backtracking ($13$ conflicts vs.\ $7{,}763$ nodes on minimal puzzles; $107$ vs.\ $15{,}598$ on the hardest one).
 (ii) VSIDS matters on hard puzzles ($13.2$ vs.\ $63.2$ conflicts); restarts make no difference at this size. (iii) The redundant ``digit occurs at least once in each unit'' clauses reduce mean conflicts from $149.6$ to $15.0$ on minimal puzzles.

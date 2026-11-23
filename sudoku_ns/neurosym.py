@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .encoding import build_solver, decode, model_to_grid, var
+from .encoding import build_solver, decode, model_to_grid, puzzle_units, var
 
 
 @dataclass
@@ -39,7 +39,12 @@ class Result:
 def _solve_core(grid, P, mode, hint_conf, check_unique):
     t0 = time.time()
     s = build_solver(True)
-    givens = [var(i // 9, i % 9, d) for i, d in enumerate(grid) if d]
+    pu = puzzle_units(grid)                    # bit-mask pass over the givens
+    if pu is None:                             # duplicate digit in a unit: UNSAT without search
+        return Result(None, None, mode, 0, 0, 0, 0, 0, time.time() - t0)
+    for l in pu:
+        s.add_clause([l])
+    givens =[var(i // 9, i % 9, d) for i, d in enumerate(grid) if d]
     blanks = [i for i in range(81) if not grid[i]]
     if mode in ("guided", "both") and P is not None:
         ph, act = {}, {}

@@ -49,6 +49,39 @@ def build_solver(extended: bool = True, **kw) -> CDCLSolver:
     return s
 
 
+def unit_masks(grid) -> list[int] | None:
+    """One int per unit (9 rows, 9 cols, 9 boxes, +2 diagonals); bit d-1 set <=> digit d present.
+    Start at 0, traverse the grid once, OR in each given's bit.  None if a unit has a duplicate."""
+    from .csp import CELL_UNITS, UNITS
+    um = [0] * len(UNITS)
+    for i, d in enumerate(grid):
+        if d:
+            bit = 1 << (d - 1)
+            for k in CELL_UNITS[i]:
+                if um[k] & bit:
+                    return None
+                um[k] |= bit
+    return um
+
+
+def puzzle_units(grid) -> list[int] | None:
+    """Puzzle-specific unit clauses from the bit-masks: for every blank cell, each digit already
+    present in one of its units is ruled out (-x).  Returns None if the givens already clash."""
+    from .csp import CELL_UNITS
+    um = unit_masks(grid)
+    if um is None:
+        return None
+    out = []
+    for i in range(81):
+        if grid[i]:
+            continue
+        seen = 0
+        for k in CELL_UNITS[i]:
+            seen |= um[k]
+        out += [-var(i // 9, i % 9, d + 1) for d in range(9) if seen >> d & 1]
+    return out
+
+
 def givens_to_assumptions(grid) -> list[int]:
     return [var(i // 9, i % 9, d) for i, d in enumerate(grid) if d]
 
