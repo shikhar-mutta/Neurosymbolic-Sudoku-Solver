@@ -7,6 +7,7 @@
   python main.py train                     # (re)train the neural module (a few minutes)
   python main.py --variant standard ...    # classic rules instead of diagonal
 Options for solve-board / random:  --mode {plain,guided,hints,both}  (default: both)
+                                   --explain   show an unsatisfied condition (conflict) and why the search cannot go on
 """
 import argparse
 import os
@@ -29,7 +30,7 @@ def load_guide():
     return NeuralGuide.load(MODEL)
 
 
-def solve_and_report(grid, mode, variant, truth=None):
+def solve_and_report(grid, mode, variant, truth=None, explain=False):
     from sudoku_ns import generator as G
     from sudoku_ns.neurosym import NeuroSymbolicSolver
     guide = load_guide() if mode != "plain" else None
@@ -45,6 +46,9 @@ def solve_and_report(grid, mode, variant, truth=None):
     print(f"mode={mode}: decisions={res.decisions} conflicts={res.conflicts} solver-calls={res.rounds} "
           f"hints used={res.hints_used} dropped (wrong)={res.hints_dropped} time={res.time:.3f}s")
     print(f"plain CDCL : decisions={base.decisions} conflicts={base.conflicts} time={base.time:.3f}s")
+    if explain:
+        from sudoku_ns.explain import explain_run
+        print(explain_run(grid, res.solution))
 
 
 def main():
@@ -54,13 +58,15 @@ def main():
     sub = ap.add_subparsers(dest="cmd")
     b = sub.add_parser("solve-board"); b.add_argument("file", nargs="?", default=DEFAULT_INPUT)
     b.add_argument("--mode", choices=["plain", "guided", "hints", "both"], default="both")
+    b.add_argument("--explain", action="store_true", help="show unsatisfied conditions (conflicts) and why")
     r = sub.add_parser("random"); r.add_argument("--clues", type=int, default=0, help="0 = minimal puzzle")
     r.add_argument("--seed", type=int, default=None)
     r.add_argument("--mode", choices=["plain", "guided", "hints", "both"], default="both")
+    r.add_argument("--explain", action="store_true")
     sub.add_parser("train")
     a = ap.parse_args()
     if a.cmd is None:
-        a.cmd, a.file, a.mode = "solve-board", DEFAULT_INPUT, "both"
+        a.cmd, a.file, a.mode, a.explain = "solve-board", DEFAULT_INPUT, "both", False
     if a.variant is None:                              # `# variant: standard` line in the input file
         a.variant = "diagonal"
         if a.cmd == "solve-board" and a.file != "-" and Path(a.file).exists():
@@ -80,7 +86,7 @@ def main():
         puz, truth = G.random_puzzle(random.Random(a.seed), a.clues)
         print(f"Random {a.variant} puzzle ({sum(1 for x in puz if x)} clues):"); print(G.pretty(puz))
         print("\nAs an input file:"); print(G.grid_to_list_text(puz))
-        solve_and_report(puz, a.mode, a.variant, truth)
+        solve_and_report(puz, a.mode, a.variant, truth, a.explain)
     else:
         from sudoku_ns import generator as G
         text = sys.stdin.read() if a.file == "-" else Path(a.file).read_text()
@@ -90,7 +96,7 @@ def main():
             sys.exit(f"Invalid input file: {e}\nExpected format (see examples/inputs/standard_classic.txt):\n"
                      "board = [\n    [6, _, _, _, 9, 8, _, _, 4],\n    ... 9 rows ...\n]")
         print(f"Input ({a.variant} rules):"); print(G.pretty(grid))
-        solve_and_report(grid, a.mode, a.variant)
+        solve_and_report(grid, a.mode, a.variant, None, a.explain)
 
 
 if __name__ == "__main__":

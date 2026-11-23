@@ -70,6 +70,7 @@ class CDCLSolver:
         self.stats = Stats()
         self.model: list[int] | None = None
         self.core: list[int] = []
+        self.hook = None            # optional object with on_conflict(solver, clause_idx, learnt, bt)
         for _ in range(n_vars):
             self.new_var()
 
@@ -314,6 +315,8 @@ class CDCLSolver:
                     self.ok = False
                     return False
                 learnt, bt = self._analyze(confl)
+                if self.hook is not None:      # trail is still intact here
+                    self.hook.on_conflict(self, confl, learnt, bt)
                 self._cancel_until(bt)
                 if len(learnt) == 1:
                     self._enqueue(learnt[0], None)

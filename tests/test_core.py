@@ -105,3 +105,13 @@ def test_symmetry_preserves_validity():
     p, sol = G.random_puzzle(rng)
     t = G.symmetry_transform(sol, rng)
     assert E.is_valid_solution(t)
+
+
+def test_explain_shows_unsatisfied_condition():
+    from sudoku_ns.explain import explain_run
+    hard, sol = G.random_puzzle(random.Random(5), 0)        # real conflicts occur
+    txt = explain_run(hard, sol)
+    assert "UNSATISFIED CONDITION" in txt and "Conflict #1" in txt
+    easy, sol2 = G.random_puzzle(random.Random(6), 36)      # solved by deduction -> what-if demo
+    txt2 = explain_run(easy, sol2)
+    assert "UNSATISFIED CONDITION" in txt2 and "What if" in txt2
